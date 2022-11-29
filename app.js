@@ -19,7 +19,19 @@ const run = async () => {
 
         // set all collection
         const productsCollection = client.db("LaptopDokan").collection("products");
-        const categoriesCollection = client.db("LaptopDokan").collection("categories");
+        const categoriesCollection = client.db("LaptopDokan").collection("categories")
+
+        // setup routing
+        app.get('/', (req, res) => {
+            res.send('Hello world')
+        })
+
+        // find categories
+        app.get('/categories', async (req, res) => {
+            const cursor = {};
+            const result = await categoriesCollection.find({}).toArray();
+            res.send(result)
+        })
 
     } catch (err) {
         console.log(err)
@@ -29,11 +41,7 @@ run().catch(err => {
     console.log(err)
 })
 
-// setup routing
-app.get('/', (req, res) => {
-    res.send('Hello world')
-    console.log(uri)
-})
+
 
 // set not found handlers
 app.use((req, res, next) => {
