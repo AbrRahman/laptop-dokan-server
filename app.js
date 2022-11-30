@@ -15,6 +15,23 @@ app.use(cors())
 const uri = `mongodb+srv://${process.env.DD_USER}:${process.env.DB_PASSWORD}@cluster0.fotdr.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+const verifyJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send('unauthorized access');
+    }
+    const token = authHeader.split(' ')[1];;
+    jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'forbidden access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+
+}
+
+
 const run = async () => {
     try {
 
@@ -22,6 +39,7 @@ const run = async () => {
         const productsCollection = client.db("LaptopDokan").collection("products");
         const categoriesCollection = client.db("LaptopDokan").collection("categories");
         const userCollection = client.db("LaptopDokan").collection("users");
+        const orderCollection = client.db("LaptopDokan").collection("orders");
         // setup routing
         app.get('/', (req, res) => {
             res.send('Hello world')
@@ -42,12 +60,24 @@ const run = async () => {
             res.send(result)
         })
 
+        // booking product
+        app.post('/booking', async (req, res) => {
+            const bookingData = req.body;
+            const result = await orderCollection.insertOne(bookingData);
+            if (result) {
+                res.send(result)
+            } else {
+                res.send({
+                    acknowledged: false
+                })
+            }
+        })
         // create jsonwebtoken 
         app.get('/jwt', async (req, res) => {
             const email = req.query.email;
             const exitingUser = await userCollection.findOne({ email: email });
             if (exitingUser) {
-                const token = jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                const token = await jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
                 res.send({
                     token: token
                 });
