@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const dotenv = require('dotenv');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 dotenv.config();
 const port = process.env.PORT || 5000;
@@ -40,6 +41,24 @@ const run = async () => {
             const result = await productsCollection.find(cursor).toArray();
             res.send(result)
         })
+
+        // create jsonwebtoken 
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const exitingUser = await userCollection.findOne({ email: email });
+            if (exitingUser) {
+                const token = jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                res.send({
+                    token: token
+                });
+            } else {
+                res.status(403).send({
+                    message: "unauthorize user"
+                })
+            }
+
+        })
+
 
         // get user 
         app.get('/user/:id', async (req, res) => {
