@@ -3,7 +3,7 @@ const app = express();
 const dotenv = require('dotenv');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 dotenv.config();
 const port = process.env.PORT || 5000;
 // passing json
@@ -59,7 +59,12 @@ const run = async () => {
             const result = await productsCollection.find(cursor).toArray();
             res.send(result)
         })
-
+        //a sellers products
+        app.get('/myproduct/:email', async (req, res) => {
+            const email = req.params.email;
+            const myProduct = await productsCollection.find({ seller_email: email }).toArray();
+            res.send(myProduct);
+        })
         // booking product
         app.post('/booking', verifyJWT, async (req, res) => {
             const bookingData = req.body;
@@ -76,6 +81,12 @@ const run = async () => {
                     acknowledged: false
                 })
             }
+        })
+        // get Buyers orders
+        app.get('/myorder/:email', async (req, res) => {
+            const email = req.params.email;
+            const orders = await orderCollection.find({ userEmail: email }).toArray();
+            res.send(orders)
         })
         // create jsonwebtoken 
         app.get('/jwt', async (req, res) => {
@@ -103,6 +114,17 @@ const run = async () => {
                 user: exitingUser
             });
         })
+        // get all buyers
+        app.get('/buyers', async (req, res) => {
+            const query = { role: "bayer" }
+            const bayer = await userCollection.find(query).toArray();
+            res.send(bayer)
+        })
+        app.get('/sellers', async (req, res) => {
+            const query = { role: "seller" }
+            const seller = await userCollection.find(query).toArray();
+            res.send(seller)
+        })
         // create user
         app.post('/user', async (req, res) => {
             const user = req.body;
@@ -117,6 +139,14 @@ const run = async () => {
             }
 
 
+        })
+        //  delete a user 
+        app.delete('/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+            res.send(result)
+            console.log(result)
         })
         // make a user admin
         app.put('/user/admin/:email', async (req, res) => {
