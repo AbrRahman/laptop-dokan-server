@@ -124,7 +124,7 @@ const run = async () => {
             const email = req.params.email;
             console.log(email)
             res.send(email)
-            const filter = { email: email }
+            const filter = { email }
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
@@ -135,7 +135,28 @@ const run = async () => {
             const result = await userCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
+        //  check admin
+        app.get('/user/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await userCollection.findOne(query);
+            res.send({ isAdmin: user?.role === 'admin' });
+        })
 
+        //  check bayer
+        app.get('/user/bayer/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await userCollection.findOne(query);
+            res.send({ isBayer: user?.role === 'bayer' });
+        })
+        //  check seller
+        app.get('/user/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await userCollection.findOne(query);
+            res.send({ isSeller: user?.role === 'seller' });
+        })
 
     } catch (err) {
         console.log(err)
