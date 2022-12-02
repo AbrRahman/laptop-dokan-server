@@ -65,6 +65,19 @@ const run = async () => {
             const myProduct = await productsCollection.find({ seller_email: email }).toArray();
             res.send(myProduct);
         })
+        // add a product 
+        app.post('/myproduct', async (req, res) => {
+            const product = req.body;
+            const result = await productsCollection.insertOne(product);
+            console.log(result)
+            if (result) {
+                res.send(result)
+            } else {
+                res.send({
+                    acknowledged: false
+                })
+            }
+        })
         // booking product
         app.post('/booking', verifyJWT, async (req, res) => {
             const bookingData = req.body;
